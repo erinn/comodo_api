@@ -19,6 +19,36 @@ class ComodoCA(object):
                'Apache/ModSSL': 2,
                'Apache-SSL': 3,
                'C2Net Stronghold': 4,
+               'Cisco 3000 Series VPN Concentrator': 33,
+               'Citrix': 34,
+               'Cobalt Raq': 5,
+               'Covalent Server Software': 6,
+               'IBM HTTP Server': 7,
+               'IBM Internet Connection Server': 8,
+               'iPlanet': 9,
+               'Java Web Server (Javasoft / Sun)': 10,
+               'Lotus Domino': 11,
+               'Lotus Domino Go!': 12,
+               'Microsoft IIS 1.x to 4.x': 13,
+               'Microsoft IIS 5.x and later': 14,
+               'Netscape Enterprise Server': 15,
+               'Netscape FastTrac': 16,
+               'Novell Web Server': 17,
+               'Oracle': 18,
+               'Quid Pro Quo': 19,
+               'R3 SSL Server': 20,
+               'Raven SSL': 21,
+               'RedHat Linux': 22,
+               'SAP Web Application Server': 23,
+               'Tomcat': 24,
+               'Website Professional': 25,
+               'WebStar 4.x and later': 26,
+               'WebTen (from Tenon)': 27,
+               'Zeus Web Server': 28,
+               'Ensim': 29,
+               'Plesk': 30,
+               'WHM/cPanel': 31,
+               'H-Sphere': 32,
                'OTHER': -1,
                }
 
@@ -66,8 +96,6 @@ class ComodoTLSService(ComodoCA):
         """
         # Using get for consistency and to allow defaults to be easily set
         self.api_url = kwargs.get('api_url')
-        # We set a floor on the CA polling time to not create undue traffic
-        self.ca_poll_wait = kwargs['ca_poll_wait'] if kwargs['ca_poll_wait'] >= 60 else 60
         self.customer_login_uri = kwargs.get('customer_login_uri')
         self.login = kwargs.get('login')
         self.org_id = kwargs.get('org_id')
@@ -101,7 +129,6 @@ class ComodoTLSService(ComodoCA):
         # Very basic error checking
         if result.statusCode != 0:
             print(ComodoCA.status_code[result.statusCode])
-            sys.exit(3)
         else:
             return result.types
 
@@ -157,12 +184,9 @@ class ComodoTLSService(ComodoCA):
                                             serverType=ComodoCA.formats[server_type], term=term, comments='')
 
         if result > 0:
-            print(self.ca_poll_wait)
-            print(result)
-            sys.exit(5)
+            return result
         else:
-            print(ComodoCA.status_code[result.statusCode])
-            sys.exit(2)
+           return ComodoCA.status_code[result.statusCode]
 
         # Should never be reached
         return None
