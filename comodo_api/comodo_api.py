@@ -54,7 +54,7 @@ class ComodoCA(object):
 
     status_code = {1: 'Certificate available',
                    2: 'Certificates Attached',
-                   0: 'Certificate being processed by Comodo',
+                   0: 'Successful',
                    -10: 'The CSR cannot be decoded!',
                    -11: 'The CSR uses an unsupported algorithm!',
                    -12: 'The CSR has an invalid signature!',
@@ -128,7 +128,7 @@ class ComodoTLSService(ComodoCA):
 
         # Very basic error checking
         if result.statusCode != 0:
-            print(ComodoCA.status_code[result.statusCode])
+            return ComodoCA.status_code[result.statusCode]
         else:
             return result.types
 
@@ -136,6 +136,8 @@ class ComodoTLSService(ComodoCA):
         """
         Poll for certificate availability after submission.
 
+        :param str format_type: The format type to use (example: 'X509 PEM Certificate only')
+        :param int id: The certificate ID
         :return: A string indicating the return collected from Comodo API, and a system exit code.
         :rtype: string
         """
@@ -144,18 +146,23 @@ class ComodoTLSService(ComodoCA):
                                              formatType=ComodoCA.format_type[format_type])
 
         if result['statusCode'] == 2:
-            print(result['SSL']['certificate'])
-            sys.exit(0)
+            return result['SSL']['certificate']
         elif result['statusCode'] == 0:
-            print(self.ca_poll_wait)
-            print(self.env['CERTMONGER_CA_COOKIE'])
-            sys.exit(5)
+            return id
         else:
-            print(ComodoCA.status_code[result.statusCode])
-            sys.exit(3)
+            return ComodoCA.status_code[result.statusCode]
 
-        # Should never be reached
-        return None
+    def revoke(self, id, reason):
+        """
+        Revoke a certificate.
+
+        :param str reason: Reason for revocation (up to 256 characters), can be blank: ''
+        :param int id: The certificate ID
+        :return:
+        """
+        result = self.client.service.revoke(authData=self.auth, id=id, reason=reason)
+
+        return ComodoCA.status_code[result]
 
     def submit(self, cert_type_name, csr, revoke_password, term, subject_alt_names='',
                server_type='OTHER'):
@@ -167,7 +174,7 @@ class ComodoTLSService(ComodoCA):
         :param int term: The length, in years, for the certificate to be issued
         :param string subject_alt_names: Subject Alternative Names separated by a ",".
         :param string server_type: The type of server for the TLS certificate e.g 'Apache/ModSSL'
-        :return: A string indicating the certificate ID to be collected (or the error message), and a system exit code.
+        :return: A string indicating the certificate ID to be collected (or the error message)
         :rtype: string
         """
 
@@ -186,7 +193,4 @@ class ComodoTLSService(ComodoCA):
         if result > 0:
             return result
         else:
-           return ComodoCA.status_code[result.statusCode]
-
-        # Should never be reached
-        return None
+            return ComodoCA.status_code[result.statusCode]
