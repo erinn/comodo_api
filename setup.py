@@ -78,14 +78,6 @@ setup(
     url=URL,
     keywords=['comodo-api'],
     packages=find_packages(exclude=('tests', 'docs', 'etc')),
-    # If your package is a single module, use this instead of 'packages':
-    # py_modules=['mypackage'],
-
-    entry_points={
-        'console_scripts': [
-            'certmonger_comodo_helper = certmonger_comodo_helper:main',
-        ]
-    },
     install_requires=REQUIRED,
     extras_require={
         'test': ['pytest'],

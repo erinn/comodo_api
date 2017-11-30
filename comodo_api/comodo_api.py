@@ -86,13 +86,15 @@ class ComodoTLSService(ComodoCA):
     def __init__(self, **kwargs):
         """
         :param string api_url: The full URL for the API server
-        :param int    ca_poll_wait: The period of time in seconds to wait until polling the CA for cert availability
         :param string customer_login_uri: The URI for the customer login (if your login to the Comodo GUI is at
                 https://hard.cert-manager.com/customer/foo/, your login URI is 'foo').
+        :param string login: The login user
         :param string org_id: The organization ID
         :param string password: The API user's password
         :param string secret_key: The API user's secret key
-        :param string login: The API user
+        :param bool client_cert_auth: Whether to use client certificate authentication
+        :param string client_public_certificate: The path to the public key if using client cert auth
+        :param string client_private_key: The path to the private key if using client cert auth
         """
         # Using get for consistency and to allow defaults to be easily set
         self.api_url = kwargs.get('api_url')
@@ -132,17 +134,17 @@ class ComodoTLSService(ComodoCA):
         else:
             return result.types
 
-    def poll(self, format_type, id):
+    def poll(self, format_type, cert_id):
         """
         Poll for certificate availability after submission.
 
         :param str format_type: The format type to use (example: 'X509 PEM Certificate only')
-        :param int id: The certificate ID
+        :param int cert_id: The certificate ID
         :return: A string indicating the return collected from Comodo API, and a system exit code.
         :rtype: string
         """
 
-        result = self.client.service.collect(authData=self.auth, id=id,
+        result = self.client.service.collect(authData=self.auth, id=cert_id,
                                              formatType=ComodoCA.format_type[format_type])
 
         if result['statusCode'] == 2:
@@ -152,15 +154,16 @@ class ComodoTLSService(ComodoCA):
         else:
             return ComodoCA.status_code[result.statusCode]
 
-    def revoke(self, id, reason):
+    def revoke(self, cert_id, reason):
         """
         Revoke a certificate.
 
         :param str reason: Reason for revocation (up to 256 characters), can be blank: ''
-        :param int id: The certificate ID
-        :return:
+        :param int cert_id: The certificate ID
+        :return: The result of the operation, 'Successful' on success
+        :rtype: string
         """
-        result = self.client.service.revoke(authData=self.auth, id=id, reason=reason)
+        result = self.client.service.revoke(authData=self.auth, id=cert_id, reason=reason)
 
         return ComodoCA.status_code[result]
 
@@ -169,25 +172,22 @@ class ComodoTLSService(ComodoCA):
         """
         Submit a certificate request to Comodo.
 
-        :param string cert_type_name: The full cert type name (Example: 'PlatinumSSL Certificate')
+        :param string cert_type_name: The full cert type name (Example: 'PlatinumSSL Certificate') the supported
+                                      certificate types for your account can be obtained with the
+                                      get_cert_types() method.
+        :param string csr: The Certificate Signing Request (CSR)
         :param string revoke_password: A password for certificate revocation
         :param int term: The length, in years, for the certificate to be issued
         :param string subject_alt_names: Subject Alternative Names separated by a ",".
-        :param string server_type: The type of server for the TLS certificate e.g 'Apache/ModSSL'
+        :param string server_type: The type of server for the TLS certificate e.g 'Apache/ModSSL' full list available in
+                                   ComodoCA.server_type
         :return: A string indicating the certificate ID to be collected (or the error message)
         :rtype: string
         """
-
-        cert_types = self.get_cert_types()
-
-        for type in cert_types:
-            if type.name == cert_type_name:
-                cert_type = type
-
         result = self.client.service.enroll(authData=self.auth, orgId=self.org_id, secretKey=self.secret_key,
                                             csr=csr, phrase=revoke_password,
                                             subjAltNames=subject_alt_names,
-                                            certType=cert_type, numberServers=1,
+                                            certType=cert_type_name, numberServers=1,
                                             serverType=ComodoCA.formats[server_type], term=term, comments='')
 
         if result > 0:
