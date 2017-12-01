@@ -147,10 +147,10 @@ class ComodoTLSService(ComodoCA):
         result = self.client.service.collect(authData=self.auth, id=cert_id,
                                              formatType=ComodoCA.format_type[format_type])
 
-        if result['statusCode'] == 2:
-            return result['SSL']['certificate']
-        elif result['statusCode'] == 0:
-            return id
+        if result.statusCode == 2:
+            return result.SSL.certificate
+        elif result.statusCode == 0:
+            return cert_id
         else:
             return ComodoCA.status_code[result.statusCode]
 
@@ -180,7 +180,7 @@ class ComodoTLSService(ComodoCA):
         :param int term: The length, in years, for the certificate to be issued
         :param string subject_alt_names: Subject Alternative Names separated by a ",".
         :param string server_type: The type of server for the TLS certificate e.g 'Apache/ModSSL' full list available in
-                                   ComodoCA.server_type
+                                   ComodoCA.server_type (Default: OTHER)
         :return: A string indicating the certificate ID to be collected (or the error message)
         :rtype: string
         """

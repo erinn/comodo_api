@@ -86,8 +86,17 @@ setup(
     include_package_data=True,
     license='AGPL-3.0',
     classifiers=[
-        # Trove classifiers
-        # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
+        # How mature is this project? Common values are
+        #   3 - Alpha
+        #   4 - Beta
+        #   5 - Production/Stable
+        'Development Status :: 3 - Alpha',
+
+        # Indicate who your project is intended for
+        'Intended Audience :: Developers',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+
+        # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: GNU Affero General Public License v3',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
