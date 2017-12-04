@@ -1,5 +1,4 @@
 from requests import Session
-import sys
 from zeep import Client
 from zeep.transports import Transport
 
@@ -12,8 +11,7 @@ class ComodoCA(object):
     format_type = {'X509 PEM Bundle': 0,
                    'X509 PEM Certificate only': 1,
                    'X509 PEM Intermediate certificate only': 2,
-                   'PKCS#7 PEM Bundle': 3,
-                   'PKCS#7 DER Bundle': 4}
+                   'PKCS#7 PEM Bundle': 3,}
 
     formats = {'AOL': 1,
                'Apache/ModSSL': 2,
@@ -78,6 +76,7 @@ class ComodoCA(object):
                    -120: 'Customer configuration is not allowed the requested action',
                    }
 
+    # { 'certificate_id': int, }
 
 class ComodoTLSService(ComodoCA):
     """
@@ -119,6 +118,18 @@ class ComodoTLSService(ComodoCA):
         self.auth.password = self.password
         self.auth.customerLoginUri = self.customer_login_uri
 
+    def _create_message(self, status_code, **kwargs):
+        """
+        Return the API message in a standardized format.
+
+        :param int status_code:
+        :return: A dictionary in the form of: {kwargs, 'status': {'code': int, 'message':str}}
+        :rtype: dict
+        """
+        message = {'status': {'code': status_code, 'message': ComodoCA.status_code[status_code]}}
+        message.update(kwargs)
+        return message
+
     def get_cert_types(self):
         """
         Collect the certificate types that are available to the customer.
@@ -129,43 +140,47 @@ class ComodoTLSService(ComodoCA):
         result = self.client.service.getCustomerCertTypes(authData=self.auth)
 
         # Very basic error checking
-        if result.statusCode != 0:
-            return ComodoCA.status_code[result.statusCode]
+        if result.statusCode == 0:
+            message = self._create_message(result.statusCode, **{'cert_types': result.types})
+            return message
         else:
-            return result.types
+            return self._create_message(result.statusCode)
 
-    def poll(self, format_type, cert_id):
+    def collect(self, cert_id, format_type):
         """
         Poll for certificate availability after submission.
 
         :param str format_type: The format type to use (example: 'X509 PEM Certificate only')
         :param int cert_id: The certificate ID
-        :return: A string indicating the return collected from Comodo API, and a system exit code.
-        :rtype: string
+        :return: The certificate_id or the certificate depending on whether the certificate is ready (check status code)
+        :rtype: dict
         """
 
         result = self.client.service.collect(authData=self.auth, id=cert_id,
                                              formatType=ComodoCA.format_type[format_type])
 
+        # The certificate is ready for collection
         if result.statusCode == 2:
-            return result.SSL.certificate
+            return self._create_message(result.statusCode, {'certificate': result.SSL.certificate})
+        # The certificate is not ready for collection yet
         elif result.statusCode == 0:
-            return cert_id
+            return self._create_message(0, {'certificate_id': cert_id})
+        # Some error occurred
         else:
-            return ComodoCA.status_code[result.statusCode]
+            return self._create_message(result.statusCode)
 
-    def revoke(self, cert_id, reason):
+    def revoke(self, cert_id, reason=''):
         """
         Revoke a certificate.
 
-        :param str reason: Reason for revocation (up to 256 characters), can be blank: ''
         :param int cert_id: The certificate ID
+        :param str reason: Reason for revocation (up to 256 characters), can be blank: ''
         :return: The result of the operation, 'Successful' on success
         :rtype: string
         """
         result = self.client.service.revoke(authData=self.auth, id=cert_id, reason=reason)
 
-        return ComodoCA.status_code[result]
+        return self._create_message(result)
 
     def submit(self, cert_type_name, csr, revoke_password, term, subject_alt_names='',
                server_type='OTHER'):
@@ -184,13 +199,19 @@ class ComodoTLSService(ComodoCA):
         :return: A string indicating the certificate ID to be collected (or the error message)
         :rtype: string
         """
+        cert_types = self.get_cert_types()
+
+        for cert_type in cert_types:
+            if cert_type.name == cert_type_name:
+                cert_type_def = cert_type
+
         result = self.client.service.enroll(authData=self.auth, orgId=self.org_id, secretKey=self.secret_key,
-                                            csr=csr, phrase=revoke_password,
-                                            subjAltNames=subject_alt_names,
-                                            certType=cert_type_name, numberServers=1,
+                                            csr=csr, phrase=revoke_password, subjAltNames=subject_alt_names,
+                                            certType=cert_type_def, numberServers=1,
                                             serverType=ComodoCA.formats[server_type], term=term, comments='')
 
+        # Anything less than 0 is an error, anything greater is the certificate ID
         if result > 0:
-            return result
+            return self._create_message(0, {'certificate_id': result})
         else:
-            return ComodoCA.status_code[result.statusCode]
+            return self._create_message(result)
