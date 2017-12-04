@@ -1,0 +1,49 @@
+{
+  "http_interactions": [
+    {
+      "recorded_at": "2017-12-04T08:11:52",
+      "request": {
+        "body": {
+          "encoding": "utf-8",
+          "string": "<?xml version='1.0' encoding='utf-8'?>\n<soap-env:Envelope xmlns:soap-env=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap-env:Body><ns0:getCustomerCertTypes xmlns:ns0=\"http://ssl.ws.epki.comodo.com/\"><authData><login><LOGIN></login><password><PASSWORD></password><customerLoginUri><CUSTOMER_LOGIN_URI></customerLoginUri></authData></ns0:getCustomerCertTypes></soap-env:Body></soap-env:Envelope>"
+        },
+        "headers": {
+          "Accept": "*/*",
+          "Accept-Encoding": "gzip, deflate",
+          "Connection": "keep-alive",
+          "Content-Length": "413",
+          "Content-Type": "text/xml; charset=utf-8",
+          "SOAPAction": "\"\"",
+          "User-Agent": "Zeep/2.4.0 (www.python-zeep.org)"
+        },
+        "method": "POST",
+        "uri": "https://hard.cert-manager.com:443/ws/EPKIManagerSSL"
+      },
+      "response": {
+        "body": {
+          "encoding": "utf-8",
+          "string": "<?xml version='1.0' encoding='UTF-8'?><S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\"><S:Body><ns2:getCustomerCertTypesResponse xmlns:ns2=\"http://ssl.ws.epki.comodo.com/\"><return><statusCode>0</statusCode><types><id>75</id><name>Comodo Intranet SSL Certificate</name><terms>1</terms><terms>2</terms><terms>3</terms></types><types><id>74</id><name>Comodo Unified Communications Certificate</name><terms>1</terms><terms>2</terms><terms>3</terms></types><types><id>69</id><name>PlatinumSSL Wildcard Certificate</name><terms>1</terms><terms>2</terms><terms>3</terms></types><types><id>68</id><name>PlatinumSSL Certificate</name><terms>1</terms><terms>2</terms><terms>3</terms></types></return></ns2:getCustomerCertTypesResponse></S:Body></S:Envelope>"
+        },
+        "headers": {
+          "Connection": "Keep-Alive",
+          "Content-Type": "text/xml;charset=utf-8",
+          "Date": "Mon, 04 Dec 2017 08:11:52 GMT",
+          "Keep-Alive": "timeout=15, max=98",
+          "Server": "Apache",
+          "Set-Cookie": "CCMBSESSIONID=A1BABF8A9490430690CD17DB9D5863C1; Path=/; Secure; HttpOnly",
+          "Strict-Transport-Security": "max-age=15768000",
+          "Transfer-Encoding": "chunked",
+          "X-Content-Type-Options": "nosniff",
+          "X-Frame-Options": "SAMEORIGIN",
+          "X-Xss-Protection": "1; mode=block"
+        },
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "url": "https://hard.cert-manager.com:443/ws/EPKIManagerSSL"
+      }
+    }
+  ],
+  "recorded_with": "betamax/0.8.0"
+}

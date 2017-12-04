@@ -13,13 +13,14 @@ from setuptools import find_packages, setup, Command
 
 # Package meta-data.
 NAME = 'comodo_api'
-DESCRIPTION = 'Easier access to the comodo API.'
+DESCRIPTION = 'Easier and more consistent access to the comodo API.'
 URL = 'https://github.com/erinn/comodo_api'
 EMAIL = 'erinn.looneytriggs@gmail.com'
 AUTHOR = 'Erinn Looney-Triggs'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
+    'requests',
     'zeep',
 ]
 
@@ -80,7 +81,7 @@ setup(
     packages=find_packages(exclude=('tests', 'docs', 'etc')),
     install_requires=REQUIRED,
     extras_require={
-        'test': ['pytest'],
+        'test': ['betamax', 'pytest'],
     },
     python_requires='>=3.4, <4',
     include_package_data=True,

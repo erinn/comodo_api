@@ -150,8 +150,8 @@ class ComodoTLSService(ComodoCA):
         """
         Poll for certificate availability after submission.
 
-        :param str format_type: The format type to use (example: 'X509 PEM Certificate only')
         :param int cert_id: The certificate ID
+        :param str format_type: The format type to use (example: 'X509 PEM Certificate only')
         :return: The certificate_id or the certificate depending on whether the certificate is ready (check status code)
         :rtype: dict
         """
@@ -161,10 +161,10 @@ class ComodoTLSService(ComodoCA):
 
         # The certificate is ready for collection
         if result.statusCode == 2:
-            return self._create_message(result.statusCode, {'certificate': result.SSL.certificate})
+            return self._create_message(result.statusCode, **{'certificate': result.SSL.certificate})
         # The certificate is not ready for collection yet
         elif result.statusCode == 0:
-            return self._create_message(0, {'certificate_id': cert_id})
+            return self._create_message(0, **{'certificate_id': cert_id})
         # Some error occurred
         else:
             return self._create_message(result.statusCode)
@@ -176,7 +176,7 @@ class ComodoTLSService(ComodoCA):
         :param int cert_id: The certificate ID
         :param str reason: Reason for revocation (up to 256 characters), can be blank: ''
         :return: The result of the operation, 'Successful' on success
-        :rtype: string
+        :rtype: dict
         """
         result = self.client.service.revoke(authData=self.auth, id=cert_id, reason=reason)
 
@@ -196,8 +196,8 @@ class ComodoTLSService(ComodoCA):
         :param string subject_alt_names: Subject Alternative Names separated by a ",".
         :param string server_type: The type of server for the TLS certificate e.g 'Apache/ModSSL' full list available in
                                    ComodoCA.server_type (Default: OTHER)
-        :return: A string indicating the certificate ID to be collected (or the error message)
-        :rtype: string
+        :return: The certificate_id and the normal status messages for errors.
+        :rtype: dict
         """
         cert_types = self.get_cert_types()
 
@@ -212,6 +212,6 @@ class ComodoTLSService(ComodoCA):
 
         # Anything less than 0 is an error, anything greater is the certificate ID
         if result > 0:
-            return self._create_message(0, {'certificate_id': result})
+            return self._create_message(0, **{'certificate_id': result})
         else:
             return self._create_message(result)
