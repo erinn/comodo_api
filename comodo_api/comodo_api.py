@@ -201,7 +201,7 @@ class ComodoTLSService(ComodoCA):
         """
         cert_types = self.get_cert_types()
 
-        for cert_type in cert_types:
+        for cert_type in cert_types['cert_types']:
             if cert_type.name == cert_type_name:
                 cert_type_def = cert_type
 
