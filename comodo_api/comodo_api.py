@@ -161,13 +161,17 @@ class ComodoTLSService(ComodoCA):
 
         # The certificate is ready for collection
         if result.statusCode == 2:
-            return self._create_message(result.statusCode, **{'certificate': result.SSL.certificate})
+            return self._create_message(result.statusCode, **{'certificate': result.SSL.certificate,
+                                                              'certificate_status': 'issued',
+                                                              'certificate_id': cert_id})
         # The certificate is not ready for collection yet
         elif result.statusCode == 0:
-            return self._create_message(0, **{'certificate_id': cert_id})
+            return self._create_message(0, **{'certificate_id': cert_id, 'certificate': '',
+                                              'certificate_status': 'pending'})
         # Some error occurred
         else:
-            return self._create_message(result.statusCode)
+            return self._create_message(result.statusCode, **{'certificate_id': cert_id, 'certificate': '',
+                                                              'certificate_status': 'unknown'})
 
     def revoke(self, cert_id, reason=''):
         """
@@ -199,16 +203,16 @@ class ComodoTLSService(ComodoCA):
         :return: The certificate_id and the normal status messages for errors.
         :rtype: dict
         """
-        cert_types = self.get_cert_types()
+        result = self.get_cert_types()
 
-        for cert_type in cert_types['cert_types']:
+        for cert_type in result['cert_types']:
             if cert_type.name == cert_type_name:
                 cert_type_def = cert_type
 
         result = self.client.service.enroll(authData=self.auth, orgId=self.org_id, secretKey=self.secret_key,
-                                            csr=csr, phrase=revoke_password, subjAltNames=subject_alt_names,
-                                            certType=cert_type_def, numberServers=1,
-                                            serverType=ComodoCA.formats[server_type], term=term, comments='')
+                                           csr=csr, phrase=revoke_password, subjAltNames=subject_alt_names,
+                                           certType=cert_type_def, numberServers=1,
+                                           serverType=ComodoCA.formats[server_type], term=term, comments='')
 
         # Anything less than 0 is an error, anything greater is the certificate ID
         if result > 0:

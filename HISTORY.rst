@@ -2,6 +2,11 @@
 
 History
 -------
+0.2.2 (2017-12-06)
+++++++++++++++++++
+* Expand tests
+* Make returns even more consistent
+
 0.2.1 (2017-12-04)
 ++++++++++++++++++
 

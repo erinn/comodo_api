@@ -1,0 +1,50 @@
+{
+  "http_interactions": [
+    {
+      "recorded_at": "2017-12-06T17:24:12",
+      "request": {
+        "body": {
+          "encoding": "utf-8",
+          "string": "<?xml version='1.0' encoding='utf-8'?>\n<soap-env:Envelope xmlns:soap-env=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap-env:Body><ns0:revoke xmlns:ns0=\"http://ssl.ws.epki.comodo.com/\"><authData><login><LOGIN></login><password><PASSWORD></password><customerLoginUri><CUSTOMER_LOGIN_URI></customerLoginUri></authData><id>581119</id><reason>Revoked for testing</reason></ns0:revoke></soap-env:Body></soap-env:Envelope>"
+        },
+        "headers": {
+          "Accept": "*/*",
+          "Accept-Encoding": "gzip, deflate",
+          "Connection": "keep-alive",
+          "Content-Length": "436",
+          "Content-Type": "text/xml; charset=utf-8",
+          "Cookie": "CCMBSESSIONID=A1BABF8A9490430690CD17DB9D5863C1",
+          "SOAPAction": "\"\"",
+          "User-Agent": "Zeep/2.4.0 (www.python-zeep.org)"
+        },
+        "method": "POST",
+        "uri": "https://hard.cert-manager.com:443/ws/EPKIManagerSSL"
+      },
+      "response": {
+        "body": {
+          "encoding": "utf-8",
+          "string": "<?xml version='1.0' encoding='UTF-8'?><S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\"><S:Body><ns2:revokeResponse xmlns:ns2=\"http://ssl.ws.epki.comodo.com/\"><return>0</return></ns2:revokeResponse></S:Body></S:Envelope>"
+        },
+        "headers": {
+          "Connection": "Keep-Alive",
+          "Content-Type": "text/xml;charset=utf-8",
+          "Date": "Wed, 06 Dec 2017 17:24:12 GMT",
+          "Keep-Alive": "timeout=15, max=98",
+          "Server": "Apache",
+          "Set-Cookie": "CCMBSESSIONID=A1BABF8A9490430690CD17DB9D5863C1; Path=/; Secure; HttpOnly",
+          "Strict-Transport-Security": "max-age=15768000",
+          "Transfer-Encoding": "chunked",
+          "X-Content-Type-Options": "nosniff",
+          "X-Frame-Options": "SAMEORIGIN",
+          "X-Xss-Protection": "1; mode=block"
+        },
+        "status": {
+          "code": 200,
+          "message": "OK"
+        },
+        "url": "https://hard.cert-manager.com:443/ws/EPKIManagerSSL"
+      }
+    }
+  ],
+  "recorded_with": "betamax/0.8.0"
+}
