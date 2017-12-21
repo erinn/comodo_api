@@ -20,6 +20,7 @@ AUTHOR = 'Erinn Looney-Triggs'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
+    'pyjsend',
     'requests',
     'zeep',
 ]
@@ -32,7 +33,7 @@ with io.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = '\n' + f.read()
 
 # Load the package's __version__.py module as a dictionary.
-about = {'__version__': '0.2.2'}
+about = {'__version__': '0.3.0'}
 
 
 class PublishCommand(Command):

@@ -1,3 +1,4 @@
+import jsend
 from requests import Session
 from zeep import Client
 from zeep.transports import Transport
@@ -11,7 +12,8 @@ class ComodoCA(object):
     format_type = {'X509 PEM Bundle': 0,
                    'X509 PEM Certificate only': 1,
                    'X509 PEM Intermediate certificate only': 2,
-                   'PKCS#7 PEM Bundle': 3,}
+                   'PKCS#7 PEM Bundle': 3,
+                   }
 
     formats = {'AOL': 1,
                'Apache/ModSSL': 2,
@@ -76,7 +78,6 @@ class ComodoCA(object):
                    -120: 'Customer configuration is not allowed the requested action',
                    }
 
-    # { 'certificate_id': int, }
 
 class ComodoTLSService(ComodoCA):
     """
@@ -118,17 +119,16 @@ class ComodoTLSService(ComodoCA):
         self.auth.password = self.password
         self.auth.customerLoginUri = self.customer_login_uri
 
-    def _create_message(self, status_code, **kwargs):
+    def _create_error(self, status_code):
         """
-        Return the API message in a standardized format.
+        Construct an error message in jsend format.
 
-        :param int status_code:
-        :return: A dictionary in the form of: {kwargs, 'status': {'code': int, 'message':str}}
+        :param int status_code: The status code to translate into an error message
+        :return: A dictionary in jsend format with the error and the code
         :rtype: dict
         """
-        message = {'status': {'code': status_code, 'message': ComodoCA.status_code[status_code]}}
-        message.update(kwargs)
-        return message
+
+        return jsend.error(message=ComodoCA.status_code[status_code], code=status_code)
 
     def get_cert_types(self):
         """
@@ -139,12 +139,10 @@ class ComodoTLSService(ComodoCA):
         """
         result = self.client.service.getCustomerCertTypes(authData=self.auth)
 
-        # Very basic error checking
         if result.statusCode == 0:
-            message = self._create_message(result.statusCode, **{'cert_types': result.types})
-            return message
+            return jsend.success({'cert_types': result.types})
         else:
-            return self._create_message(result.statusCode)
+            return self._create_error(result.statusCode)
 
     def collect(self, cert_id, format_type):
         """
@@ -161,17 +159,14 @@ class ComodoTLSService(ComodoCA):
 
         # The certificate is ready for collection
         if result.statusCode == 2:
-            return self._create_message(result.statusCode, **{'certificate': result.SSL.certificate,
-                                                              'certificate_status': 'issued',
-                                                              'certificate_id': cert_id})
+            return jsend.success({'certificate': result.SSL.certificate, 'certificate_status': 'issued',
+                                  'certificate_id': cert_id})
         # The certificate is not ready for collection yet
         elif result.statusCode == 0:
-            return self._create_message(0, **{'certificate_id': cert_id, 'certificate': '',
-                                              'certificate_status': 'pending'})
+            return jsend.fail({'certificate_id': cert_id, 'certificate': '', 'certificate_status': 'pending'})
         # Some error occurred
         else:
-            return self._create_message(result.statusCode, **{'certificate_id': cert_id, 'certificate': '',
-                                                              'certificate_status': 'unknown'})
+            return self._create_error(result.statusCode)
 
     def revoke(self, cert_id, reason=''):
         """
@@ -184,7 +179,10 @@ class ComodoTLSService(ComodoCA):
         """
         result = self.client.service.revoke(authData=self.auth, id=cert_id, reason=reason)
 
-        return self._create_message(result)
+        if result == 0:
+            return jsend.success()
+        else:
+            return self._create_error(result)
 
     def submit(self, cert_type_name, csr, revoke_password, term, subject_alt_names='',
                server_type='OTHER'):
@@ -203,19 +201,26 @@ class ComodoTLSService(ComodoCA):
         :return: The certificate_id and the normal status messages for errors.
         :rtype: dict
         """
-        result = self.get_cert_types()
+        cert_types = self.get_cert_types()
 
-        for cert_type in result['cert_types']:
+        # If collection of cert types fails we simply pass the error back.
+        if cert_types['status'] == 'error':
+            return cert_types
+
+        # We do this because we need to pass the entire cert type definition back to Comodo
+        # not just the name.
+        for cert_type in cert_types['data']['cert_types']:
             if cert_type.name == cert_type_name:
                 cert_type_def = cert_type
 
         result = self.client.service.enroll(authData=self.auth, orgId=self.org_id, secretKey=self.secret_key,
-                                           csr=csr, phrase=revoke_password, subjAltNames=subject_alt_names,
-                                           certType=cert_type_def, numberServers=1,
-                                           serverType=ComodoCA.formats[server_type], term=term, comments='')
+                                            csr=csr, phrase=revoke_password, subjAltNames=subject_alt_names,
+                                            certType=cert_type_def, numberServers=1,
+                                            serverType=ComodoCA.formats[server_type], term=term, comments='')
 
-        # Anything less than 0 is an error, anything greater is the certificate ID
+        # Anything greater than 0 is the certificate ID
         if result > 0:
-            return self._create_message(0, **{'certificate_id': result})
+            return jsend.success({'certificate_id': result})
+        # Anything else is an error
         else:
-            return self._create_message(result)
+            return self._create_error(result)

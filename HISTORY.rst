@@ -2,6 +2,10 @@
 
 History
 -------
+0.3.0 (2017-12-21)
+++++++++++++++++++
+* Move to jsend for return format
+
 0.2.2 (2017-12-06)
 ++++++++++++++++++
 * Expand tests
