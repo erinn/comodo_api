@@ -5,6 +5,7 @@ History
 0.3.0 (2017-12-21)
 ++++++++++++++++++
 * Move to jsend for return format
+* Test failures as well as success
 
 0.2.2 (2017-12-06)
 ++++++++++++++++++
